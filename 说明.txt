@@ -1,0 +1,261 @@
+
+1、需要新建一个目录用来存放mongoDB的数据。
+
+2、cmd进入到/bin目录下，
+		mongod.exe --dbpath D:\db  回车
+	27017是芒果默认的数据库的端口
+
+3、设置window的环境变量
+		复制： C:\Program Files\MongoDB\Server\3.2\bin
+
+	不配置环境变量也可以，就是每次都要进去对应的目录下去执行。
+	检测配置成功否：
+		cmd打开：
+			输入mongod -help 回车
+
+4、启动数据库服务
+	根据自己的需要，修改mongogdb.bat文件
+
+5、 mongoDB与关系型数据库对比
+	mysql的表格 叫table， 表的一行数据叫record, 表字段叫字段field，字段值叫value，灵活性扩展性差。
+	mongoDB叫 集合list，表的一行叫做文档document,表字段叫键key，字段值value,灵活度扩展性极高
+
+
+6、 新建一个文件夹
+		新建文件：mongodb.bat
+			内容：mongod --dbpath D:\db
+		然后双击此文件，开启芒果。
+
+		新建mongodb27017.bat
+		用shell方式来启动它，
+		用到mongo命令
+			需要写上：
+			mongo 127.0.0.1:27017/admin
+
+		然后双击，开启.
+			shell命令里：
+				1、首先我要创建一个数据库：
+					use [databaseName]
+				这个时候什么也不干就离开，这个空数据库会被删除。
+
+				2、我想给指定的这个数据库添加集合并且添加记录：后面输入的是bson格式。
+				输入： db.persons.insert({name:"uspcat"})
+				这里是新建了一个集合persons,
+				往里添加了一行记录。
+
+				3、此时我想要查看所有数据库
+				show dbs
+
+				4、我想要查看一下所有的集合、也就是文档：
+					show collections
+
+				5、要查看对应的_id， index
+					db.system.indexes.find()
+
+				6、查Persons这个文档
+					db.persons.find()
+					db.persons.findOne()查找第一个
+
+				7、我想更新文档数据
+					db.persons.update({name:"uspcat"},{$set:{name:"heliujie"}})
+					就是把uspcat改为heliujie
+
+				8、我想删除文档中的数据
+					db.persons.remove({"name":"jack"});
+
+				9、删除文档：
+					db.persons.drop();
+
+				10、删除数据库
+					db.dropDatabase();
+
+				11、db.help(); //查看所有方法
+					db.persons.help();
+
+				12、db.stats(); //状态
+
+
+				13、批量插入数据
+					shell的for循环
+					db.persons.drop();
+					//可以直接写Js
+					for(var i=0; i<10; i++){
+						db.persions.inert({name:i})
+					}
+					db.persions.find();
+
+				14、插入数据还能用save方法
+					db.persions.save({name:id1})
+					save与insert区别在于，
+					如果id是相同的情况下，save会更新，而insert会报错。
+
+				15、根据条件删除
+					db.persions.remove({_id:1})
+
+
+				16、修改器
+					db.persions.update({name:4},{$set:{age:27}})
+					// 找到name:4那条数据，如果有age,那就更新为27，如果没有，那就添加。
+
+					db.persions.update({name:4},{$inc:{name:1}})
+					这样会+1； 结果是 name :5
+
+					db.persions.update({age:4},{$unset:{age:1}})
+					结果是删除掉 age:4这个 数据的键
+
+					push的使用：
+					db.persions.insert({_id:5, name:"jack",myArr:[]});
+					db.persions.update({_id:5}, {$push:{myArr:"A"}});
+					db.persions.update({_id:5}, {$push:{myArr2:"B"}});
+					//myArr2这个键是不存在的，它会自动添加。
+
+					db.persions.update({_id:5},{$pushAll:{myArr2:['C',"D","E","F"]}});
+
+					删除数组中的某项
+					db.persions.update({_id:5}, {$pop:{myArr:-1 }}) 删除第一个
+					db.persions.update({_id:5}, {$pop:{myArr:1 }})  删除最后一个
+
+
+
+	7、数据库何集合的命名规范
+		1、不能是空字符串
+		2、不能含有‘’，空格等特殊
+		3、全部小写
+		4、最多64字节
+
+	8、BSON： 是JSON的扩展，新增了日期，浮点等Json不支持的数据类型
+		 null
+		 布尔
+		 32、64位整数
+		 64位浮点
+		 字符串
+		 对象id
+		 日期
+		 正则
+		 js块
+		 undefined
+		 array
+		 二进制
+
+
+	9、Find详解
+		1）、指定一个键，返回回来：
+			我们在Js文件里写一个模拟的Json数据，然后来一个for循环，利用insert方法添加。
+			然后复制到命令行去，实现添加。
+
+			//我想查一部分数据：
+			db.persions.find({},{_id:0, name:1, country:1})	
+			结果是，只显示name，country数据
+
+			我想查询出25-27年龄范围的数据
+			db.persons.find({age:{$gte:27,$lte:25}}, {_id:0,name:1,age:1});
+
+			不是韩国的学生数据查出来
+			db.persons.find({country:{$ne:"Korea"}}, {_id:0,m:1,country:1})
+
+			查询出美国或者中国的学生
+			db.persoins.find({country:{$in:["USA","China"]}})
+
+
+			查询出不是中国或美国的学生信息
+			db.persoins.find({country:{$nin:["USA","China"]}})
+
+			查询出名字中存在li的学生的信息
+			db.persons.find({name:/li/i},{_id:0,name:1})
+
+			查询出名字中不存在li的学生的信息
+			db.persons.find({name:{$not:/li/i}},{_id:0,name:1})
+
+			查询出喜欢看js的学生
+			db.persons.find({books:{$all:["js"]}},{book:1,_id:0})
+
+			查询出前5条数据
+			db.persons.find({},{_id:0,name:1}).limit(5);
+
+
+	10、MongoVUE collections一直没有数据的问题解决：
+		肯定是wiredTiger存储引擎启动了，
+		我们需要更换引擎,在~/bin目录下：	
+			mongod --storageEngine mmapv1   --dbpath D:\mongoDBdata
+
+
+	11、GirdFS 是mongoDB自带的文件系统，用二进制的形式存储文件
+		大型文件系统的绝大多数是GridFS可以完成
+
+		利用的工具: mongofiles.exe
+
+		使用：
+			查看GridFs所有功能
+			cmd->  mongofiles
+
+			上传一个文件
+			mongofiles -d testName -l "D:\a.txt" put "a.txt"
+
+			查看所有文件
+			mongofiles -d testName list
+
+			删除 文件
+			mongofiles -d testName delete "a.txt"
+			直接在VUE里删除就好了。
+
+
+	12、启动项：
+		--dbpath   指定数据库的目录  默认在c:\data\db\
+		--port  指定服务监听的端口号，默认27017
+		--fork 用守护进程的方式启动mongoDB
+		--logpath  指定日志的输出路径，默认是控制台
+		--config  指定启动项用文件的路径
+		--auth  用安全认证方式启动数据库
+
+		这些可以配置到响应文件去。
+
+		新建三个文件：
+			mongogdbCONF.bat
+				mongod.exe --config mongodb.conf
+
+			mongodb.conf
+				dbpath = D:\mongoDBdata
+				port = 8888
+
+			8888shell.bat
+				mongo 127.0.0.1:8888
+
+	双击mongogdbCONF.bat文件  启动芒果
+	双击888shell， 启动shell
+
+
+
+	13、 导出数据 做备份
+		把数据库testName 中的persons导出
+			mongoexport -d testName -c persons -o D:/persons.json
+
+		导入数据
+		mongoimport --db testName --collection persions --file d:/persons.json
+
+		懒人备份
+			直接拷贝
+
+
+	14、Fsync锁
+		上锁： 缓存池的数据全部进到数据库。
+				db.runCommand({fsync:1, lock:1})
+
+		解锁：db.currentOp()
+
+	15、为admin添加uspcat用户和testName数据库的yunfengcheng用户
+		use admin
+		db.addUser("uspcat",'123');
+		use testName
+		db.addUser("yunfengcheng",'123')
+
+		启用用户
+		db.auth("名称","密码")
+
+		用户删除操作
+		db.system.users.remove({user:"yunfengcheng"})
+
+
+	16、主从复制是一个简单的数据库同步备份的集群技术。
+		--master用来确定主服务器
+		--slave和-source来控制从服务器
+		
